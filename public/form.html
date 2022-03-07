@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="description" content="" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>email form</title>
   </head>
@@ -20,7 +24,7 @@
         .querySelector(".ajaxsend")
         .addEventListener("click", function () {
           var inputdata = document.forms[0].elements[0].value;
-          sendAjax("http://127.0.0.1:3000/ajax_send_email", inputdata);
+          sendAjax("http://localhost:3000/ajax_send_email", inputdata);
         });
 
       function sendAjax(url, data) {
@@ -38,8 +42,11 @@
         xhr.addEventListener("load", function () {
           //console.log(xhr.responseText);
           var result = JSON.parse(xhr.responseText);
-          if (result.result !== "ok") return;
-          document.querySelector(".result").innerHTML = result.email;
+          var resultDiv = document.querySelector(".result");
+
+          if (result.result !== "ok")
+            resultDiv.innerHTML = "your email is not found";
+          else resultDiv.innerHTML = result.name;
         });
       }
     </script>
