@@ -8,7 +8,7 @@ var passport = require("passport");
 const { emit } = require("process");
 var LocalStrategy = require("passport-local").Strategy;
 
-//Database Setting
+// DATABASE SETTING
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -18,17 +18,16 @@ var connection = mysql.createConnection({
 });
 connection.connect();
 
-//Router !!
 router.get("/", function (req, res) {
   var msg;
   var errMsg = req.flash("error");
-
   if (errMsg) msg = errMsg;
-  res.render("join.ejs", { message: msg });
+  res.render("login.ejs", { message: msg });
 });
 
+//passport.serialize
 passport.serializeUser(function (user, done) {
-  console.log("passport session save: ", user.id);
+  console.log("passport session save : ", user.id);
   done(null, user.id);
 });
 
@@ -38,7 +37,7 @@ passport.deserializeUser(function (id, done) {
 });
 
 passport.use(
-  "local-join",
+  "local-login",
   new LocalStrategy(
     {
       usernameField: "email",
@@ -53,23 +52,13 @@ passport.use(
           if (err) return done(err);
 
           if (rows.length) {
-            console.log("existed user");
             //false이면 fail redirect로 간다.
-            //즉, join 화면으로 돌아가고
-            return done(null, false, { message: "your email is already used" });
+            //즉, login 화면으로 돌아가고
+            return done(null, { email: email, id: rows[0].UID });
           } else {
-            //만약 중복 email이 없으면 success redirect로 가서
-            //insert를 진행하여 main으로 간다.
-            var sql = { email: email, pw: password };
-            var query = connection.query(
-              "insert into user set ?",
-              sql,
-              function (err, rows) {
-                if (err) throw err;
-                //done은 serialize 메소드를 불러 처리를 한다. 세션 처리가 필요!
-                return done(null, { email: email, id: rows.insertId });
-              }
-            );
+            return done(null, false, {
+              message: "your login info is not found",
+            });
           }
         }
       );
@@ -77,15 +66,19 @@ passport.use(
   )
 );
 
-router.post(
-  "/",
-  passport.authenticate("local-join", {
-    //object return
-    successRedirect: "/main",
-    failureRedirect: "/join",
-    failureFlash: true,
-  })
-);
+router.post("/", function (req, res, next) {
+  passport.authenticate("local-login", function (err, user, info) {
+    if (err) res.status(500).json(err);
+    if (!user) return res.status(401).json(info.message);
+
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.json(user);
+    });
+  })(req, res, next);
+});
 
 // router.post("/", function (req, res) {
 //   var body = req.body;
@@ -103,5 +96,4 @@ router.post(
 //     }
 //   );
 // });
-
 module.exports = router;

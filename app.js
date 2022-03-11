@@ -8,11 +8,9 @@ var session = require("express-session");
 var flash = require("connect-flash");
 
 app.listen(3000, function () {
-  console.log("start!!! express server on port 3000");
+  console.log("start, express server on port 3000");
 });
 
-// static 디렉토리 설정
-// 미들웨어
 app.use(express.static("public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
